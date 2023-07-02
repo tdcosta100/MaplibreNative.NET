@@ -7,6 +7,12 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+#if defined(MLN_WITH_EGL)
+#include <EGL/egl.h>
+#elif defined(MLN_WITH_OSMESA)
+#include <GL/osmesa.h>
+#endif
+
 namespace DOTNET_NAMESPACE
 {
     ref class Size;

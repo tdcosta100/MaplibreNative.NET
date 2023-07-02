@@ -3,7 +3,7 @@
 #include <mbgl/gfx/backend.hpp>
 #include <mbgl/gl/renderable_resource.hpp>
 
-#ifdef _MSC_VER
+#if !defined(MLN_WITH_EGL) && !defined(MLN_WITH_OSMESA)
 extern "C" PROC WINAPI wgl_GetProcAddress(LPCSTR procName);
 #endif
 
@@ -101,12 +101,16 @@ namespace DOTNET_NAMESPACE
     {
     }
 
-#ifdef _MSC_VER
     mbgl::gl::ProcAddress NativeExternalRenderingContextBackend::getExtensionFunctionPointer(const char* name)
     {
+#if defined(MLN_WITH_EGL)
+        return (mbgl::gl::ProcAddress)::eglGetProcAddress(name);
+#elif defined(MLN_WITH_OSMESA)
+        return (mbgl::gl::ProcAddress)::OSMesaGetProcAddress(name);
+#else
         return (mbgl::gl::ProcAddress)::wgl_GetProcAddress(name);
-    }
 #endif
+    }
 
     void NativeExternalRenderingContextBackend::updateAssumedState()
     {

@@ -45,6 +45,13 @@ target_compile_definitions(
 		DOTNET_NAMESPACE=MaplibreNative
 )
 
+if(MLN_WITH_EGL)
+	target_compile_definitions(mbgl-dotnet PRIVATE MLN_WITH_EGL)
+elseif(MLN_WITH_OSMESA)
+	target_compile_definitions(mbgl-dotnet PRIVATE MLN_WITH_OSMESA)
+	target_include_directories(mbgl-dotnet PRIVATE ${PROJECT_SOURCE_DIR}/dependencies/maplibre-native/platform/windows/vendor/mesa3d/include)
+endif()
+
 target_sources(
 	mbgl-dotnet
 	PRIVATE
