@@ -1,6 +1,7 @@
 #pragma once
 #include "NativeWrapper.h"
 #include <algorithm>
+#include <memory>
 #include <msclr/gcroot.h>
 
 namespace mbgl
