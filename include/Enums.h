@@ -35,4 +35,18 @@ namespace DOTNET_NAMESPACE
         Downwards,
         Leftwards,
     };
+
+    public enum class FileSourceType : System::Byte {
+        Asset,
+        Database,
+        FileSystem,
+        Network,
+        Mbtiles,
+        /// <summary>
+        /// Resource loader acts as a proxy and has logic
+        /// for request delegation to Asset, Cache, and other
+        /// file sources.
+        /// </summary>
+        ResourceLoader
+    };
 }

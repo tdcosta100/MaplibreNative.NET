@@ -67,6 +67,7 @@ target_sources(
 	${PROJECT_SOURCE_DIR}/src/ExternalRenderingContextBackend.cpp
 	${PROJECT_SOURCE_DIR}/src/ExternalRenderingContextFrontend.cpp
 	${PROJECT_SOURCE_DIR}/src/FileSource.cpp
+	${PROJECT_SOURCE_DIR}/src/FileSourceManager.cpp
 	${PROJECT_SOURCE_DIR}/src/FreeCameraOptions.cpp
 	${PROJECT_SOURCE_DIR}/src/GeoJSON.cpp
 	${PROJECT_SOURCE_DIR}/src/HeadlessFrontend.cpp
