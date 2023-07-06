@@ -84,17 +84,17 @@ namespace DOTNET_NAMESPACE
         NativePointer->mustRevalidate = value;
     }
 
-    System::String^ Response::Data::get()
+    cli::array<System::Byte>^ Response::Data::get()
     {
         if (NativePointer->data)
         {
-            return Convert::ToSystemString(*NativePointer->data);
+            return Convert::ToSystemArray<uint8_t, System::Byte>(reinterpret_cast<uint8_t*>(const_cast<char*>(NativePointer->data->data())), static_cast<System::Int32>(NativePointer->data->size()));
         }
         
         return nullptr;
     }
 
-    System::Void Response::Data::set(System::String^ value)
+    System::Void Response::Data::set(cli::array<System::Byte>^ value)
     {
         if (value)
         {

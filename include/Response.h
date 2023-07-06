@@ -45,7 +45,7 @@ namespace DOTNET_NAMESPACE
         /// <summary>
         /// The actual data of the response. Present only for non-error, non-notModified responses.
         /// </summary>
-        property System::String^ Data { System::String^ get(); System::Void set(System::String^ value); }
+        property cli::array<System::Byte>^ Data { cli::array<System::Byte>^ get(); System::Void set(cli::array<System::Byte>^ value); }
 
         property System::Nullable<System::DateTime> Modified { System::Nullable<System::DateTime> get(); System::Void set(System::Nullable<System::DateTime> value); }
         property System::Nullable<System::DateTime> Expires { System::Nullable<System::DateTime> get(); System::Void set(System::Nullable<System::DateTime> value); }

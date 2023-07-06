@@ -44,6 +44,13 @@ namespace DOTNET_NAMESPACE
             return msclr::interop::marshal_as<std::string>(string);
         }
 
+        static std::string ToStdString(cli::array<System::Byte>^ array)
+        {
+            pin_ptr<System::Byte> pointer = &array[0];
+
+            return std::string(reinterpret_cast<char*>(pointer), array->Length);
+        }
+
         static System::DateTime ToSystemDateTime(std::chrono::time_point<std::chrono::system_clock> dateTime)
         {
             return System::DateTime(std::chrono::time_point_cast<std::chrono::nanoseconds>(dateTime).time_since_epoch().count() / 100 + epochTicks);
