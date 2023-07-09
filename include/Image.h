@@ -65,13 +65,21 @@ namespace DOTNET_NAMESPACE
             NativePointer->resize(*size->NativePointer);
         }
 
-        cli::array<System::Byte>^ Data()
+        cli::array<System::Byte>^ GetData()
         {
             cli::array<System::Byte>^ result = gcnew cli::array<System::Byte>(static_cast<System::Int32>(NativePointer->bytes()));
 
             System::Runtime::InteropServices::Marshal::Copy(System::IntPtr(NativePointer->data.get()), result, 0, result->Length);
             
             return result;
+        }
+
+        property System::IntPtr Data
+        {
+            System::IntPtr get()
+            {
+                return System::IntPtr(NativePointer->data.get());
+            }
         }
 
         property System::Boolean Valid
