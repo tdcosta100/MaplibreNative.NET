@@ -24,6 +24,16 @@ set_target_properties(
 target_compile_options(mbgl-dotnet PRIVATE "/doc")
 
 if(CMAKE_GENERATOR STREQUAL "Ninja")
+	set(_TARGET_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}")
+
+	set_target_properties(
+		mbgl-dotnet
+		PROPERTIES
+			ARCHIVE_OUTPUT_DIRECTORY ${_TARGET_DIRECTORY}
+			LIBRARY_OUTPUT_DIRECTORY ${_TARGET_DIRECTORY}
+			RUNTIME_OUTPUT_DIRECTORY ${_TARGET_DIRECTORY}
+	)
+
 	string(REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
 	string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 	target_compile_options(mbgl-dotnet PRIVATE "/clr" "/EHa")
@@ -31,10 +41,12 @@ if(CMAKE_GENERATOR STREQUAL "Ninja")
 	add_custom_command(
 		TARGET mbgl-dotnet
 		POST_BUILD
-		COMMAND xdcmake *.xdc /nologo /assembly:"${ASSEMBLY_NAME}" /out:"${ASSEMBLY_NAME}.xml"
-		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+		COMMAND xdcmake "..\\*.xdc" /nologo /assembly:"${ASSEMBLY_NAME}" /out:"${ASSEMBLY_NAME}.xml"
+		WORKING_DIRECTORY ${_TARGET_DIRECTORY}
 		VERBATIM
 	)
+
+	unset(_TARGET_DIRECTORY)
 endif()
 
 target_compile_definitions(
