@@ -6,6 +6,7 @@
 #include "ResourceOptions.h"
 #include "ResourceTransform.h"
 #include "Response.h"
+#include "RunLoop.h"
 #include <mbgl/util/async_request.hpp>
 #include <mbgl/storage/file_source.hpp>
 
@@ -13,12 +14,43 @@ namespace
 {
     using namespace ::DOTNET_NAMESPACE;
     
-    void RequestCallback(mbgl::Response response, FileSource::Callback^ callback)
+    void SystemActionHelper(
+        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
+        msclr::gcroot<System::Action^> action
+    )
+    {
+        action->Invoke();
+        taskCompletionSource->SetResult(true);
+    }
+
+    void RequestHelper(
+        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<AsyncRequest^>^> taskCompletionSource,
+        msclr::gcroot<System::Func<Resource^, FileSource::Callback^, AsyncRequest^>^> action,
+        msclr::gcroot<Resource^> resource,
+        msclr::gcroot<FileSource::Callback^> callback
+    )
+    {
+        taskCompletionSource->SetResult(action->Invoke(resource, callback));
+    }
+
+    void ForwardHelper(
+        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
+        msclr::gcroot<System::Action<Resource^, Response^, System::Action^>^> action,
+        msclr::gcroot<Resource^> resource,
+        msclr::gcroot<Response^> response,
+        msclr::gcroot<System::Action^> callback
+    )
+    {
+        action->Invoke(resource, response, callback);
+        taskCompletionSource->SetResult(true);
+    }
+
+    void RequestCallbackHelper(mbgl::Response response, FileSource::Callback^ callback)
     {
         callback->Invoke(gcnew Response(Response::CreateNativePointerHolder(response)));
     }
 
-    void ForwardCallback(System::Action^ callback)
+    void ForwardCallbackHelper(System::Action^ callback)
     {
         callback->Invoke();
     }
@@ -41,24 +73,37 @@ namespace DOTNET_NAMESPACE
 
     AsyncRequest^ FileSource::Request(Resource^ resource, Callback^ callback)
     {
-        return gcnew AsyncRequest(
-            AsyncRequest::CreateNativePointerHolder(
-                NativePointer->get()->request(
-                    *resource->NativePointer,
-                    std::bind(&RequestCallback, std::placeholders::_1, msclr::gcroot<Callback^>(callback))
-                )
-                .release()
+        System::Threading::Tasks::TaskCompletionSource<AsyncRequest^>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<AsyncRequest^>();
+
+        RunLoop::Get()->NativePointer->ExecuteInThread(
+            std::bind(
+                &RequestHelper,
+                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<AsyncRequest^>^>(taskCompletionSource),
+                msclr::gcroot<System::Func<Resource^, Callback^, AsyncRequest^>^>(gcnew System::Func<Resource^, Callback^, AsyncRequest^>(this, &FileSource::RequestInThread)),
+                msclr::gcroot<Resource^>(resource),
+                msclr::gcroot<Callback^>(callback)
             )
         );
+
+        return taskCompletionSource->Task->Result;
     }
 
     System::Void FileSource::Forward(Resource^ resource, Response^ response, System::Action^ callback)
     {
-        NativePointer->get()->forward(
-            *resource->NativePointer,
-            *response->NativePointer,
-            std::bind(&ForwardCallback, msclr::gcroot<System::Action^>(callback))
+        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
+
+        RunLoop::Get()->NativePointer->ExecuteInThread(
+            std::bind(
+                &ForwardHelper,
+                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
+                msclr::gcroot<System::Action<Resource^, Response^, System::Action^>^>(gcnew System::Action<Resource^, Response^, System::Action^>(this, &FileSource::ForwardInThread)),
+                msclr::gcroot<Resource^>(resource),
+                msclr::gcroot<Response^>(response),
+                msclr::gcroot<System::Action^>(callback)
+            )
         );
+
+        taskCompletionSource->Task->Wait();
     }
 
     System::Boolean FileSource::SupportsCacheOnlyRequests()
@@ -73,12 +118,32 @@ namespace DOTNET_NAMESPACE
 
     System::Void FileSource::Pause()
     {
-        NativePointer->get()->pause();
+        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
+
+        RunLoop::Get()->NativePointer->ExecuteInThread(
+            std::bind(
+                &SystemActionHelper,
+                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
+                msclr::gcroot<System::Action^>(gcnew System::Action(this, &FileSource::PauseInThread))
+            )
+        );
+
+        taskCompletionSource->Task->Wait();
     }
 
     System::Void FileSource::Resume()
     {
-        NativePointer->get()->resume();
+        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
+
+        RunLoop::Get()->NativePointer->ExecuteInThread(
+            std::bind(
+                &SystemActionHelper,
+                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
+                msclr::gcroot<System::Action^>(gcnew System::Action(this, &FileSource::ResumeInThread))
+            )
+        );
+
+        taskCompletionSource->Task->Wait();
     }
 
     System::Void FileSource::SetProperty(System::String^ key, System::String^ value)
@@ -117,5 +182,37 @@ namespace DOTNET_NAMESPACE
     System::Void FileSource::ClientOptions::set(ClientOptions_^ value)
     {
         NativePointer->get()->setClientOptions(value->NativePointer->clone());
+    }
+
+    AsyncRequest^ FileSource::RequestInThread(Resource^ resource, Callback^ callback)
+    {
+        return gcnew AsyncRequest(
+            AsyncRequest::CreateNativePointerHolder(
+                NativePointer->get()->request(
+                    *resource->NativePointer,
+                    std::bind(&RequestCallbackHelper, std::placeholders::_1, msclr::gcroot<Callback^>(callback))
+                )
+                .release()
+            )
+        );
+    }
+
+    System::Void FileSource::ForwardInThread(Resource^ resource, Response^ response, System::Action^ callback)
+    {
+        NativePointer->get()->forward(
+            *resource->NativePointer,
+            *response->NativePointer,
+            std::bind(&ForwardCallbackHelper, msclr::gcroot<System::Action^>(callback))
+        );
+    }
+
+    System::Void FileSource::PauseInThread()
+    {
+        NativePointer->get()->pause();
+    }
+
+    System::Void FileSource::ResumeInThread()
+    {
+        NativePointer->get()->resume();
     }
 }

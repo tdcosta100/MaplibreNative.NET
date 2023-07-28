@@ -1,7 +1,23 @@
 #include "Convert.h"
 #include "FileSource.h"
+#include "RunLoop.h"
 #include "Style.h"
 #include <mbgl/style/style.hpp>
+
+namespace
+{
+    using namespace ::DOTNET_NAMESPACE;
+
+    void LoadJSOURLNHelper(
+        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
+        msclr::gcroot<System::Action<System::String^>^> action,
+        msclr::gcroot<System::String^> value
+    )
+    {
+        action->Invoke(value);
+        taskCompletionSource->SetResult(true);
+    }
+}
 
 namespace DOTNET_NAMESPACE
 {
@@ -19,12 +35,34 @@ namespace DOTNET_NAMESPACE
 
     System::Void Style::LoadJSON(System::String^ json)
     {
-        NativePointer->loadJSON(Convert::ToStdString(json));
+        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
+
+        RunLoop::Get()->NativePointer->ExecuteInThread(
+            std::bind(
+                &LoadJSOURLNHelper,
+                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
+                msclr::gcroot<System::Action<System::String^>^>(gcnew System::Action<System::String^>(this, &Style::LoadJSONInThread)),
+                msclr::gcroot<System::String^>(json)
+            )
+        );
+
+        taskCompletionSource->Task->Wait();
     }
 
     System::Void Style::LoadURL(System::String^ url)
     {
-        NativePointer->loadURL(Convert::ToStdString(url));
+        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
+
+        RunLoop::Get()->NativePointer->ExecuteInThread(
+            std::bind(
+                &LoadJSOURLNHelper,
+                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
+                msclr::gcroot<System::Action<System::String^>^>(gcnew System::Action<System::String^>(this, &Style::LoadURLInThread)),
+                msclr::gcroot<System::String^>(url)
+            )
+        );
+
+        taskCompletionSource->Task->Wait();
     }
 
     System::String^ Style::GetJSON()
@@ -40,5 +78,15 @@ namespace DOTNET_NAMESPACE
     System::String^ Style::GetName()
     {
         return Convert::ToSystemString(NativePointer->getName());
+    }
+
+    System::Void Style::LoadJSONInThread(System::String^ json)
+    {
+        NativePointer->loadJSON(Convert::ToStdString(json));
+    }
+
+    System::Void Style::LoadURLInThread(System::String^ url)
+    {
+        NativePointer->loadURL(Convert::ToStdString(url));
     }
 }
