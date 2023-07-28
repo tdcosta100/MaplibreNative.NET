@@ -34,12 +34,12 @@ namespace DOTNET_NAMESPACE
         return gcnew UnassociatedImage(UnassociatedImage::CreateNativePointerHolder(mbgl::util::unpremultiply(NativePointer->clone())));
     }
 
-    System::Void PremultipliedImage::Clear(PremultipliedImage^ dstImg, Point<System::UInt32> pt, Size_^ size)
+    System::Void PremultipliedImage::Clear(PremultipliedImage^ dstImg, PointUInt pt, Size_^ size)
     {
         BasePremultipliedImage::Clear(dstImg, pt, size);
     }
 
-    System::Void PremultipliedImage::Copy(PremultipliedImage^ srcImg, PremultipliedImage^ dstImg, Point<System::UInt32> srcPt, Point<System::UInt32> dstPt, Size_^ size)
+    System::Void PremultipliedImage::Copy(PremultipliedImage^ srcImg, PremultipliedImage^ dstImg, PointUInt srcPt, PointUInt dstPt, Size_^ size)
     {
         BasePremultipliedImage::Copy(srcImg, dstImg, srcPt, dstPt, size);
     }

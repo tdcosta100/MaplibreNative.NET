@@ -14,7 +14,7 @@ namespace DOTNET_NAMESPACE
 
     template <ImageAlphaMode Mode>
     template <typename T>
-    System::Void ImageBase<Mode>::Clear(T^ dstImg, Point<System::UInt32> pt, Size_^ size)
+    System::Void ImageBase<Mode>::Clear(T^ dstImg, PointUInt pt, Size_^ size)
     {
         mbgl::Image<(mbgl::ImageAlphaMode)Mode>::clear(
             *dstImg->NativePointer,
@@ -25,7 +25,7 @@ namespace DOTNET_NAMESPACE
 
     template <ImageAlphaMode Mode>
     template <typename T>
-    System::Void ImageBase<Mode>::Copy(T^ srcImg, T^ dstImg, Point<System::UInt32> srcPt, Point<System::UInt32> dstPt, Size_^ size)
+    System::Void ImageBase<Mode>::Copy(T^ srcImg, T^ dstImg, PointUInt srcPt, PointUInt dstPt, Size_^ size)
     {
         mbgl::Image<(mbgl::ImageAlphaMode)Mode>::copy(
             *srcImg->NativePointer,
@@ -37,15 +37,15 @@ namespace DOTNET_NAMESPACE
     }
 
     template AlphaImage^ BaseAlphaImage::Clone();
-    template System::Void BaseAlphaImage::Clear(AlphaImage^ dstImg, Point<System::UInt32> pt, Size_^ size);
-    template System::Void BaseAlphaImage::Copy(AlphaImage^ srcImg, AlphaImage^ dstImg, Point<System::UInt32> srcPt, Point<System::UInt32> dstPt, Size_^ size);
+    template System::Void BaseAlphaImage::Clear(AlphaImage^ dstImg, PointUInt pt, Size_^ size);
+    template System::Void BaseAlphaImage::Copy(AlphaImage^ srcImg, AlphaImage^ dstImg, PointUInt srcPt, PointUInt dstPt, Size_^ size);
     
     template PremultipliedImage^ BasePremultipliedImage::Clone();
-    template System::Void BasePremultipliedImage::Clear(PremultipliedImage^ dstImg, Point<System::UInt32> pt, Size_^ size);
-    template System::Void BasePremultipliedImage::Copy(PremultipliedImage^ srcImg, PremultipliedImage^ dstImg, Point<System::UInt32> srcPt, Point<System::UInt32> dstPt, Size_^ size);
+    template System::Void BasePremultipliedImage::Clear(PremultipliedImage^ dstImg, PointUInt pt, Size_^ size);
+    template System::Void BasePremultipliedImage::Copy(PremultipliedImage^ srcImg, PremultipliedImage^ dstImg, PointUInt srcPt, PointUInt dstPt, Size_^ size);
     
     template UnassociatedImage^ BaseUnassociatedImage::Clone();
-    template System::Void BaseUnassociatedImage::Clear(UnassociatedImage^ dstImg, Point<System::UInt32> pt, Size_^ size);
-    template System::Void BaseUnassociatedImage::Copy(UnassociatedImage^ srcImg, UnassociatedImage^ dstImg, Point<System::UInt32> srcPt, Point<System::UInt32> dstPt, Size_^ size);
+    template System::Void BaseUnassociatedImage::Clear(UnassociatedImage^ dstImg, PointUInt pt, Size_^ size);
+    template System::Void BaseUnassociatedImage::Copy(UnassociatedImage^ srcImg, UnassociatedImage^ dstImg, PointUInt srcPt, PointUInt dstPt, Size_^ size);
 
 }

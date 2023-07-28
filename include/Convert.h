@@ -166,31 +166,34 @@ namespace DOTNET_NAMESPACE
             return result;
         }
 
-        template <typename T>
-        static mbgl::Point<T> ToNativePoint(Point<T> point)
+        static PointDouble ToPoint(mbgl::Point<double> point)
         {
-            return mbgl::Point(point.X, point.Y);
+            return PointDouble(point.x, point.y);
         }
 
-        template <typename T>
-        static Point<T> ToPoint(mbgl::Point<T> point)
+        static PointShort ToPoint(mbgl::Point<int16_t> point)
         {
-            return Point(point.x, point.y);
+            return PointShort(point.x, point.y);
         }
 
-        static mbgl::Point<double> ToNativePoint(ScreenCoordinate point)
+        static PointUInt ToPoint(mbgl::Point<uint32_t> point)
         {
-            return mbgl::Point<double>(point.X, point.Y);
+            return PointUInt(point.x, point.y);
         }
 
-        static mbgl::Point<double> ToNativePoint(TileCoordinatePoint point)
+        static mbgl::Point<double> ToNativePoint(PointDouble point)
         {
             return mbgl::Point<double>(point.X, point.Y);
         }
 
-        static mbgl::Point<int16_t> ToNativePoint(GeometryCoordinate point)
+        static mbgl::Point<int16_t> ToNativePoint(PointShort point)
         {
             return mbgl::Point<int16_t>(point.X, point.Y);
+        }
+
+        static mbgl::Point<uint32_t> ToNativePoint(PointUInt point)
+        {
+            return mbgl::Point<uint32_t>(point.X, point.Y);
         }
     };
 }

@@ -141,7 +141,7 @@ namespace DOTNET_NAMESPACE
         /// <param name="size"></param>
         /// <returns></returns>
         template <typename T = ImageAlphaModeToType<Mode>::Type>
-        static System::Void Clear(T^ dstImg, Point<System::UInt32> pt, Size_^ size);
+        static System::Void Clear(T^ dstImg, PointUInt pt, Size_^ size);
 
         /// <summary>
         /// Copy image data at <paramref name="srcPt"/> within <paramref name="size"/> from <paramref name="srcImg"/> to the rectangle of the same
@@ -160,7 +160,7 @@ namespace DOTNET_NAMESPACE
         /// move data within a single Image.
         /// </exception>
         template <typename T = ImageAlphaModeToType<Mode>::Type>
-        static System::Void Copy(T^ srcImg, T^ dstImg, Point<System::UInt32> srcPt, Point<System::UInt32> dstPt, Size_^ size);
+        static System::Void Copy(T^ srcImg, T^ dstImg, PointUInt srcPt, PointUInt dstPt, Size_^ size);
     internal:
         ImageBase(NativePointerHolder<mbgl::Image<(mbgl::ImageAlphaMode)Mode>>^ nativePointerHolder) : NativeWrapper(nativePointerHolder)
         {

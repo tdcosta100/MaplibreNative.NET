@@ -22,7 +22,7 @@ namespace DOTNET_NAMESPACE
         /// <param name="pt"></param>
         /// <param name="size"></param>
         /// <returns></returns>
-        static System::Void Clear(AlphaImage^ dstImg, Point<System::UInt32> pt, Size_^ size);
+        static System::Void Clear(AlphaImage^ dstImg, PointUInt pt, Size_^ size);
 
         /// <summary>
         /// Copy image data at <paramref name="srcPt"/> within <paramref name="size"/> from <paramref name="srcImg"/> to the rectangle of the same
@@ -39,7 +39,7 @@ namespace DOTNET_NAMESPACE
         /// source or destination. Must not be used to
         /// move data within a single Image.
         /// </exception>
-        static System::Void Copy(AlphaImage^ srcImg, AlphaImage^ dstImg, Point<System::UInt32> srcPt, Point<System::UInt32> dstPt, Size_^ size);
+        static System::Void Copy(AlphaImage^ srcImg, AlphaImage^ dstImg, PointUInt srcPt, PointUInt dstPt, Size_^ size);
     internal:
         AlphaImage(NativePointerHolder<mbgl::AlphaImage>^ nativePointerHolder);
     };

@@ -28,12 +28,12 @@ namespace DOTNET_NAMESPACE
         return BaseAlphaImage::Clone();
     }
 
-    System::Void AlphaImage::Clear(AlphaImage^ dstImg, Point<System::UInt32> pt, Size_^ size)
+    System::Void AlphaImage::Clear(AlphaImage^ dstImg, PointUInt pt, Size_^ size)
     {
         BaseAlphaImage::Clear(dstImg, pt, size);
     }
 
-    System::Void AlphaImage::Copy(AlphaImage^ srcImg, AlphaImage^ dstImg, Point<System::UInt32> srcPt, Point<System::UInt32> dstPt, Size_^ size)
+    System::Void AlphaImage::Copy(AlphaImage^ srcImg, AlphaImage^ dstImg, PointUInt srcPt, PointUInt dstPt, Size_^ size)
     {
         BaseAlphaImage::Copy(srcImg, dstImg, srcPt, dstPt, size);
     }
