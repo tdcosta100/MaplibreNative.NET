@@ -78,6 +78,7 @@ target_sources(
 	${PROJECT_SOURCE_DIR}/src/MapOptions.cpp
 	${PROJECT_SOURCE_DIR}/src/OverscaledTileID.cpp
 	${PROJECT_SOURCE_DIR}/src/PremultipliedImage.cpp
+	${PROJECT_SOURCE_DIR}/src/Projection.cpp
 	${PROJECT_SOURCE_DIR}/src/ProjectionMode.cpp
 	${PROJECT_SOURCE_DIR}/src/Renderer.cpp
 	${PROJECT_SOURCE_DIR}/src/RendererBackend.cpp
