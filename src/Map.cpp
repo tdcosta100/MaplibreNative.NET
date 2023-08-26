@@ -10,7 +10,6 @@
 #include "ProjectionMode.h"
 #include "RendererFrontend.h"
 #include "ResourceOptions.h"
-#include "RunLoop.h"
 #include "Size.h"
 #include "Style.h"
 #include "TransformState.h"
@@ -23,266 +22,7 @@ namespace
 {
     using namespace ::DOTNET_NAMESPACE;
     
-    mbgl::Map* Create(
-        mbgl::RendererFrontend& frontend,
-        mbgl::MapObserver& observer,
-        const mbgl::MapOptions& mapOptions,
-        const mbgl::ResourceOptions& resourceOptions,
-        const mbgl::ClientOptions& clientOptions = mbgl::ClientOptions()
-    )
-    {
-        mbgl::Map* result = nullptr;
-
-        std::mutex mutex;
-        std::condition_variable condition_variable;
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            [&mutex, &condition_variable, &frontend, &observer, &mapOptions, &resourceOptions, &clientOptions, &result]
-            {
-                std::unique_lock<std::mutex> lock(mutex);
-                result = new mbgl::Map(frontend, observer, mapOptions, resourceOptions, clientOptions);
-                lock.unlock();
-                condition_variable.notify_all();
-            }
-        );
-
-        std::unique_lock<std::mutex> lock(mutex);
-        condition_variable.wait(lock, [&result] { return result != nullptr; });
-        lock.unlock();
-
-        return result;
-    }
-
-    void Destroy(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<NativePointerHolder<mbgl::Map>^> pointerHolder
-    )
-    {
-        delete pointerHolder;
-        taskCompletionSource->SetResult(true);
-    }
-
-    void SystemActionHelper(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action^> action
-    )
-    {
-        action->Invoke();
-        taskCompletionSource->SetResult(true);
-    }
-
-    void RenderStillHelper(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action<Map::StillImageCallback^>^> action,
-        msclr::gcroot<Map::StillImageCallback^> callback
-    )
-    {
-        action->Invoke(callback);
-        taskCompletionSource->SetResult(true);
-    }
-
-    void RenderStillHelper2(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action<CameraOptions^, MapDebugOptions, Map::StillImageCallback^>^> action,
-        msclr::gcroot<CameraOptions^> camera,
-        msclr::gcroot<MapDebugOptions> debugOptions,
-        msclr::gcroot<Map::StillImageCallback^> callback
-    )
-    {
-        action->Invoke(camera, debugOptions, callback);
-        taskCompletionSource->SetResult(true);
-    }
-
-    void JumpToHelper(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action<CameraOptions^>^> action,
-        msclr::gcroot<CameraOptions^> camera
-    )
-    {
-        action->Invoke(camera);
-        taskCompletionSource->SetResult(true);
-    }
-
-    void EaseToFlyToHelper(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action<CameraOptions^, AnimationOptions^>^> action,
-        msclr::gcroot<CameraOptions^> camera,
-        msclr::gcroot<AnimationOptions^> animation
-    )
-    {
-        action->Invoke(camera, animation);
-        taskCompletionSource->SetResult(true);
-    }
-
-    void MoveByHelper(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action<ScreenCoordinate>^> action,
-        msclr::gcroot<ScreenCoordinate> point
-    )
-    {
-        action->Invoke(point);
-        taskCompletionSource->SetResult(true);
-    }
-
-    void MoveByHelper2(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action<ScreenCoordinate, AnimationOptions^>^> action,
-        msclr::gcroot<ScreenCoordinate> point,
-        msclr::gcroot<AnimationOptions^> animation
-    )
-    {
-        action->Invoke(point, animation);
-        taskCompletionSource->SetResult(true);
-    }
-
-    void ScaleByHelper(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action<System::Double, System::Nullable<ScreenCoordinate>>^> action,
-        msclr::gcroot<System::Double> scale,
-        msclr::gcroot<System::Nullable<ScreenCoordinate>> anchor
-    )
-    {
-        action->Invoke(scale, anchor);
-        taskCompletionSource->SetResult(true);
-    }
-
-    void ScaleByHelper2(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action<System::Double, System::Nullable<ScreenCoordinate>, AnimationOptions^>^> action,
-        msclr::gcroot<System::Double> scale,
-        msclr::gcroot<System::Nullable<ScreenCoordinate>> anchor,
-        msclr::gcroot<AnimationOptions^> animation
-    )
-    {
-        action->Invoke(scale, anchor, animation);
-        taskCompletionSource->SetResult(true);
-    }
-
-    void PitchByHelper(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action<System::Double>^> action,
-        msclr::gcroot<System::Double> pitch
-    )
-    {
-        action->Invoke(pitch);
-        taskCompletionSource->SetResult(true);
-    }
-
-    void PitchByHelper2(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action<System::Double, AnimationOptions^>^> action,
-        msclr::gcroot<System::Double> pitch,
-        msclr::gcroot<AnimationOptions^> animation
-    )
-    {
-        action->Invoke(pitch, animation);
-        taskCompletionSource->SetResult(true);
-    }
-
-    void RotateByHelper(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action<ScreenCoordinate, ScreenCoordinate>^> action,
-        msclr::gcroot<ScreenCoordinate> first,
-        msclr::gcroot<ScreenCoordinate> second
-    )
-    {
-        action->Invoke(first, second);
-        taskCompletionSource->SetResult(true);
-    }
-
-    void RotateByHelper2(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action<ScreenCoordinate, ScreenCoordinate, AnimationOptions^>^> action,
-        msclr::gcroot<ScreenCoordinate> first,
-        msclr::gcroot<ScreenCoordinate> second,
-        msclr::gcroot<AnimationOptions^> animation
-    )
-    {
-        action->Invoke(first, second, animation);
-        taskCompletionSource->SetResult(true);
-    }
-
-    void SetNorthOrientationHelper(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action<NorthOrientation>^> action,
-        msclr::gcroot<NorthOrientation> orientation
-    )
-    {
-        action->Invoke(orientation);
-        taskCompletionSource->SetResult(true);
-    }
-
-    void SetConstrainModeHelper(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action<ConstrainMode>^> action,
-        msclr::gcroot<ConstrainMode> mode
-    )
-    {
-        action->Invoke(mode);
-        taskCompletionSource->SetResult(true);
-    }
-
-    void SetViewportModeHelper(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action<ViewportMode>^> action,
-        msclr::gcroot<ViewportMode> mode
-    )
-    {
-        action->Invoke(mode);
-        taskCompletionSource->SetResult(true);
-    }
-
-    void SetSizeHelper(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action<Size^>^> action,
-        msclr::gcroot<Size^> size
-    )
-    {
-        action->Invoke(size);
-        taskCompletionSource->SetResult(true);
-    }
-
-    void SetGestureInProgressHelper(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action<System::Boolean>^> action,
-        msclr::gcroot<System::Boolean> value
-    )
-    {
-        action->Invoke(value);
-        taskCompletionSource->SetResult(true);
-    }
-
-    void SetProjectionModeHelper(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action<ProjectionMode_^>^> action,
-        msclr::gcroot<ProjectionMode_^> value
-    )
-    {
-        action->Invoke(value);
-        taskCompletionSource->SetResult(true);
-    }
-
-    void SetDebugHelper(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action<MapDebugOptions>^> action,
-        msclr::gcroot<MapDebugOptions> value
-    )
-    {
-        action->Invoke(value);
-        taskCompletionSource->SetResult(true);
-    }
-
-    void SetFreeCameraOptionsHelper(
-        msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^> taskCompletionSource,
-        msclr::gcroot<System::Action<FreeCameraOptions_^>^> action,
-        msclr::gcroot<FreeCameraOptions_^> value
-    )
-    {
-        action->Invoke(value);
-        taskCompletionSource->SetResult(true);
-    }
-
-    void StillImageCallbackHelper(std::exception_ptr eptr, Map::StillImageCallback^ callback)
+    void StillImageCallbackHandler(std::exception_ptr eptr, Map::StillImageCallback^ callback)
     {
         msclr::gcroot<System::Exception^> exception = nullptr;
 
@@ -321,7 +61,7 @@ namespace DOTNET_NAMESPACE
         _Observer(observer),
         _MapOptions(mapOptions),
         _ResourceOptions(resourceOptions),
-        NativeWrapper(Create(
+        NativeWrapper(new mbgl::Map(
             *reinterpret_cast<mbgl::RendererFrontend*>(frontend->GetNativePointer().ToPointer()),
             *_Observer->NativePointer,
             *_MapOptions->NativePointer,
@@ -336,98 +76,50 @@ namespace DOTNET_NAMESPACE
         _MapOptions(mapOptions),
         _ResourceOptions(resourceOptions),
         _ClientOptions(clientOptions),
-        NativeWrapper(
-            CreateNativePointerHolder(
-                Create(
-                    *reinterpret_cast<mbgl::RendererFrontend*>(frontend->GetNativePointer().ToPointer()),
-                    *_Observer->NativePointer,
-                    *_MapOptions->NativePointer,
-                    *_ResourceOptions->NativePointer,
-                    *_ClientOptions->NativePointer
-                ),
-                false
-            )
-        )
+        NativeWrapper(new mbgl::Map(
+            *reinterpret_cast<mbgl::RendererFrontend*>(frontend->GetNativePointer().ToPointer()),
+            *_Observer->NativePointer,
+            *_MapOptions->NativePointer,
+            *_ResourceOptions->NativePointer,
+            *_ClientOptions->NativePointer
+        ))
     {
     }
 
     Map::~Map()
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &Destroy,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<NativePointerHolder<mbgl::Map>^>(PointerHolder)
-            )
-        );
-
-        taskCompletionSource->Task->Wait();
     }
 
     System::Void Map::RenderStill(StillImageCallback^ callback)
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &RenderStillHelper,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<StillImageCallback^>^>(gcnew System::Action<StillImageCallback^>(this, &Map::RenderStillInThread)),
-                msclr::gcroot<StillImageCallback^>(callback)
-            )
-        );
-
-        taskCompletionSource->Task->Wait();
+        NativePointer->renderStill(std::bind(
+            &StillImageCallbackHandler,
+            std::placeholders::_1,
+            msclr::gcroot<StillImageCallback^>(callback)
+        ));
     }
 
     System::Void Map::RenderStill(CameraOptions^ camera, MapDebugOptions debugOptions, StillImageCallback^ callback)
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
+        NativePointer->renderStill(
+            *camera->NativePointer,
+            (mbgl::MapDebugOptions)debugOptions,
             std::bind(
-                &RenderStillHelper2,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<CameraOptions^, MapDebugOptions, StillImageCallback^>^>(gcnew System::Action<CameraOptions^, MapDebugOptions, StillImageCallback^>(this, &Map::RenderStillInThread2)),
-                msclr::gcroot<CameraOptions^>(camera),
-                msclr::gcroot<MapDebugOptions>(debugOptions),
+                &StillImageCallbackHandler,
+                std::placeholders::_1,
                 msclr::gcroot<StillImageCallback^>(callback)
             )
         );
-
-        taskCompletionSource->Task->Wait();
     }
 
     System::Void Map::TriggerRepaint()
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &SystemActionHelper,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action^>(gcnew System::Action(this, &Map::TriggerRepaintInThread))
-            )
-        );
-
-        taskCompletionSource->Task->Wait();
+        NativePointer->triggerRepaint();
     }
 
     System::Void Map::CancelTransitions()
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &SystemActionHelper,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action^>(gcnew System::Action(this, &Map::CancelTransitionsInThread))
-            )
-        );
-
-        taskCompletionSource->Task->Wait();
+        NativePointer->cancelTransitions();
     }
 
     CameraOptions^ Map::GetCameraOptions()
@@ -442,188 +134,79 @@ namespace DOTNET_NAMESPACE
 
     System::Void Map::JumpTo(CameraOptions^ camera)
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &JumpToHelper,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<CameraOptions^>^>(gcnew System::Action<CameraOptions^>(this, &Map::JumpToInThread)),
-                msclr::gcroot<CameraOptions^>(camera)
-            )
-        );
-
-        taskCompletionSource->Task->Wait();
+        NativePointer->jumpTo(*camera->NativePointer);
     }
 
     System::Void Map::EaseTo(CameraOptions^ camera, AnimationOptions^ animation)
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &EaseToFlyToHelper,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<CameraOptions^, AnimationOptions^>^>(gcnew System::Action<CameraOptions^, AnimationOptions^>(this, &Map::EaseToInThread)),
-                msclr::gcroot<CameraOptions^>(camera),
-                msclr::gcroot<AnimationOptions^>(animation)
-            )
-        );
-
-        taskCompletionSource->Task->Wait();
+        NativePointer->easeTo(*camera->NativePointer, *animation->NativePointer);
     }
 
     System::Void Map::FlyTo(CameraOptions^ camera, AnimationOptions^ animation)
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &EaseToFlyToHelper,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<CameraOptions^, AnimationOptions^>^>(gcnew System::Action<CameraOptions^, AnimationOptions^>(this, &Map::FlyToInThread)),
-                msclr::gcroot<CameraOptions^>(camera),
-                msclr::gcroot<AnimationOptions^>(animation)
-            )
-        );
-
-        taskCompletionSource->Task->Wait();
+        NativePointer->flyTo(*camera->NativePointer, *animation->NativePointer);
     }
 
     System::Void Map::MoveBy(ScreenCoordinate point)
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &MoveByHelper,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<ScreenCoordinate>^>(gcnew System::Action<ScreenCoordinate>(this, &Map::MoveByInThread)),
-                msclr::gcroot<ScreenCoordinate>(point)
-            )
-        );
-
-        taskCompletionSource->Task->Wait();
+        NativePointer->moveBy(mbgl::ScreenCoordinate(point.X, point.Y));
     }
 
     System::Void Map::MoveBy(ScreenCoordinate point, AnimationOptions^ animation)
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &MoveByHelper2,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<ScreenCoordinate, AnimationOptions^>^>(gcnew System::Action<ScreenCoordinate, AnimationOptions^>(this, &Map::MoveByInThread2)),
-                msclr::gcroot<ScreenCoordinate>(point),
-                msclr::gcroot<AnimationOptions^>(animation)
-            )
-        );
-
-        taskCompletionSource->Task->Wait();
+        NativePointer->moveBy(mbgl::ScreenCoordinate(point.X, point.Y), *animation->NativePointer);
     }
 
     System::Void Map::ScaleBy(System::Double scale, System::Nullable<ScreenCoordinate> anchor)
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &ScaleByHelper,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<System::Double, System::Nullable<ScreenCoordinate>>^>(gcnew System::Action<System::Double, System::Nullable<ScreenCoordinate>>(this, &Map::ScaleByInThread)),
-                msclr::gcroot<System::Double>(scale),
-                msclr::gcroot<System::Nullable<ScreenCoordinate>>(anchor)
-            )
+        NativePointer->scaleBy(
+            scale,
+            anchor.HasValue
+            ?
+            std::optional<mbgl::ScreenCoordinate>(mbgl::ScreenCoordinate(anchor.Value.X, anchor.Value.Y))
+            :
+            std::nullopt
         );
-
-        taskCompletionSource->Task->Wait();
     }
 
     System::Void Map::ScaleBy(System::Double scale, System::Nullable<ScreenCoordinate> anchor, AnimationOptions^ animation)
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &ScaleByHelper2,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<System::Double, System::Nullable<ScreenCoordinate>, AnimationOptions^>^>(gcnew System::Action<System::Double, System::Nullable<ScreenCoordinate>, AnimationOptions^>(this, &Map::ScaleByInThread2)),
-                msclr::gcroot<System::Double>(scale),
-                msclr::gcroot<System::Nullable<ScreenCoordinate>>(anchor),
-                msclr::gcroot<AnimationOptions^>(animation)
-            )
+        NativePointer->scaleBy(
+            scale,
+            anchor.HasValue
+            ?
+            std::optional<mbgl::ScreenCoordinate>(mbgl::ScreenCoordinate(anchor.Value.X, anchor.Value.Y))
+            :
+            std::nullopt,
+            *animation->NativePointer
         );
-
-        taskCompletionSource->Task->Wait();
     }
 
     System::Void Map::PitchBy(System::Double pitch)
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &PitchByHelper,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<System::Double>^>(gcnew System::Action<System::Double>(this, &Map::PitchByInThread)),
-                msclr::gcroot<System::Double>(pitch)
-            )
-        );
-
-        taskCompletionSource->Task->Wait();
+        NativePointer->pitchBy(pitch);
     }
 
     System::Void Map::PitchBy(System::Double pitch, AnimationOptions^ animation)
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &PitchByHelper2,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<System::Double, AnimationOptions^>^>(gcnew System::Action<System::Double, AnimationOptions^>(this, &Map::PitchByInThread2)),
-                msclr::gcroot<System::Double>(pitch),
-                msclr::gcroot<AnimationOptions^>(animation)
-            )
-        );
-
-        taskCompletionSource->Task->Wait();
+        NativePointer->pitchBy(pitch, *animation->NativePointer);
     }
 
     System::Void Map::RotateBy(ScreenCoordinate first, ScreenCoordinate second)
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &RotateByHelper,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<ScreenCoordinate, ScreenCoordinate>^>(gcnew System::Action<ScreenCoordinate, ScreenCoordinate>(this, &Map::RotateByInThread)),
-                msclr::gcroot<ScreenCoordinate>(first),
-                msclr::gcroot<ScreenCoordinate>(second)
-            )
+        NativePointer->rotateBy(
+            mbgl::ScreenCoordinate(first.X, first.Y),
+            mbgl::ScreenCoordinate(second.X, second.Y)
         );
-
-        taskCompletionSource->Task->Wait();
     }
 
     System::Void Map::RotateBy(ScreenCoordinate first, ScreenCoordinate second, AnimationOptions^ animation)
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &RotateByHelper2,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<ScreenCoordinate, ScreenCoordinate, AnimationOptions^>^>(gcnew System::Action<ScreenCoordinate, ScreenCoordinate, AnimationOptions^>(this, &Map::RotateByInThread2)),
-                msclr::gcroot<ScreenCoordinate>(first),
-                msclr::gcroot<ScreenCoordinate>(second),
-                msclr::gcroot<AnimationOptions^>(animation)
-            )
+        NativePointer->rotateBy(
+            mbgl::ScreenCoordinate(first.X, first.Y),
+            mbgl::ScreenCoordinate(second.X, second.Y),
+            *animation->NativePointer
         );
-
-        taskCompletionSource->Task->Wait();
     }
 
     CameraOptions^ Map::CameraForLatLngBounds(
@@ -773,66 +356,22 @@ namespace DOTNET_NAMESPACE
 
     System::Void Map::SetNorthOrientation(NorthOrientation orientation)
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &SetNorthOrientationHelper,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<NorthOrientation>^>(gcnew System::Action<NorthOrientation>(this, &Map::SetNorthOrientationInThread)),
-                msclr::gcroot<NorthOrientation>(orientation)
-            )
-        );
-
-        taskCompletionSource->Task->Wait();
+        NativePointer->setNorthOrientation((mbgl::NorthOrientation)orientation);
     }
 
     System::Void Map::SetConstrainMode(ConstrainMode mode)
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &SetConstrainModeHelper,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<ConstrainMode>^>(gcnew System::Action<ConstrainMode>(this, &Map::SetConstrainModeInThread)),
-                msclr::gcroot<ConstrainMode>(mode)
-            )
-        );
-
-        taskCompletionSource->Task->Wait();
+        NativePointer->setConstrainMode((mbgl::ConstrainMode)mode);
     }
 
     System::Void Map::SetViewportMode(ViewportMode mode)
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &SetViewportModeHelper,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<ViewportMode>^>(gcnew System::Action<ViewportMode>(this, &Map::SetViewportModeInThread)),
-                msclr::gcroot<ViewportMode>(mode)
-            )
-        );
-
-        taskCompletionSource->Task->Wait();
+        NativePointer->setViewportMode((mbgl::ViewportMode)mode);
     }
 
     System::Void Map::SetSize(Size^ size)
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &SetSizeHelper,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<Size^>^>(gcnew System::Action<Size^>(this, &Map::SetSizeInThread)),
-                msclr::gcroot<Size^>(size)
-            )
-        );
-
-        taskCompletionSource->Task->Wait();
+        NativePointer->setSize(*size->NativePointer);
     }
 
     ScreenCoordinate Map::PixelForLatLng(LatLng^ latLng)
@@ -913,18 +452,7 @@ namespace DOTNET_NAMESPACE
 
     System::Void Map::IsGestureInProgress::set(System::Boolean value)
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &SetGestureInProgressHelper,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<System::Boolean>^>(gcnew System::Action<System::Boolean>(this, &Map::SetGestureInProgressInThread)),
-                msclr::gcroot<System::Boolean>(value)
-            )
-        );
-
-        taskCompletionSource->Task->Wait();
+        NativePointer->setGestureInProgress(value);
     }
 
     System::Boolean Map::IsRotating::get()
@@ -964,18 +492,7 @@ namespace DOTNET_NAMESPACE
 
     System::Void Map::ProjectionMode::set(ProjectionMode_^ value)
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &SetProjectionModeHelper,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<ProjectionMode_^>^>(gcnew System::Action<ProjectionMode_^>(this, &Map::SetProjectionModeInThread)),
-                msclr::gcroot<ProjectionMode_^>(value)
-            )
-        );
-
-        taskCompletionSource->Task->Wait();
+        NativePointer->setProjectionMode(*value->NativePointer);
     }
 
     TransformState_^ Map::TransformState::get()
@@ -1000,18 +517,7 @@ namespace DOTNET_NAMESPACE
 
     System::Void Map::Debug::set(MapDebugOptions value)
     {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &SetDebugHelper,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<MapDebugOptions>^>(gcnew System::Action<MapDebugOptions>(this, &Map::SetDebugInThread)),
-                msclr::gcroot<MapDebugOptions>(value)
-            )
-        );
-
-        taskCompletionSource->Task->Wait();
+        NativePointer->setDebug((mbgl::MapDebugOptions)value);
     }
 
     System::Boolean Map::IsFullyLoaded::get()
@@ -1025,166 +531,6 @@ namespace DOTNET_NAMESPACE
     }
 
     System::Void Map::FreeCameraOptions::set(FreeCameraOptions_^ value)
-    {
-        System::Threading::Tasks::TaskCompletionSource<System::Boolean>^ taskCompletionSource = gcnew System::Threading::Tasks::TaskCompletionSource<System::Boolean>();
-
-        RunLoop::Get()->NativePointer->ExecuteInThread(
-            std::bind(
-                &SetFreeCameraOptionsHelper,
-                msclr::gcroot<System::Threading::Tasks::TaskCompletionSource<System::Boolean>^>(taskCompletionSource),
-                msclr::gcroot<System::Action<FreeCameraOptions_^>^>(gcnew System::Action<FreeCameraOptions_^>(this, &Map::SetFreeCameraOptionsInThread)),
-                msclr::gcroot<FreeCameraOptions_^>(value)
-            )
-        );
-
-        taskCompletionSource->Task->Wait();
-    }
-
-    System::Void Map::RenderStillInThread(StillImageCallback^ callback)
-    {
-        NativePointer->renderStill(std::bind(
-            &StillImageCallbackHelper,
-            std::placeholders::_1,
-            msclr::gcroot<StillImageCallback^>(callback)
-        ));
-    }
-
-    System::Void Map::RenderStillInThread2(CameraOptions^ camera, MapDebugOptions debugOptions, StillImageCallback^ callback)
-    {
-        NativePointer->renderStill(
-            *camera->NativePointer,
-            (mbgl::MapDebugOptions)debugOptions,
-            std::bind(
-                &StillImageCallbackHelper,
-                std::placeholders::_1,
-                msclr::gcroot<StillImageCallback^>(callback)
-            )
-        );
-    }
-
-    System::Void Map::TriggerRepaintInThread()
-    {
-        NativePointer->triggerRepaint();
-    }
-
-    System::Void Map::CancelTransitionsInThread()
-    {
-        NativePointer->cancelTransitions();
-    }
-
-    System::Void Map::JumpToInThread(CameraOptions^ camera)
-    {
-        NativePointer->jumpTo(*camera->NativePointer);
-    }
-
-    System::Void Map::EaseToInThread(CameraOptions^ camera, AnimationOptions^ animation)
-    {
-        NativePointer->easeTo(*camera->NativePointer, *animation->NativePointer);
-    }
-
-    System::Void Map::FlyToInThread(CameraOptions^ camera, AnimationOptions^ animation)
-    {
-        NativePointer->flyTo(*camera->NativePointer, *animation->NativePointer);
-    }
-
-    System::Void Map::MoveByInThread(ScreenCoordinate point)
-    {
-        NativePointer->moveBy(mbgl::ScreenCoordinate(point.X, point.Y));
-    }
-
-    System::Void Map::MoveByInThread2(ScreenCoordinate point, AnimationOptions^ animation)
-    {
-        NativePointer->moveBy(mbgl::ScreenCoordinate(point.X, point.Y), *animation->NativePointer);
-    }
-
-    System::Void Map::ScaleByInThread(System::Double scale, System::Nullable<ScreenCoordinate> anchor)
-    {
-        NativePointer->scaleBy(
-            scale,
-            anchor.HasValue
-            ?
-            std::optional<mbgl::ScreenCoordinate>(mbgl::ScreenCoordinate(anchor.Value.X, anchor.Value.Y))
-            :
-            std::nullopt
-        );
-    }
-
-    System::Void Map::ScaleByInThread2(System::Double scale, System::Nullable<ScreenCoordinate> anchor, AnimationOptions^ animation)
-    {
-        NativePointer->scaleBy(
-            scale,
-            anchor.HasValue
-            ?
-            std::optional<mbgl::ScreenCoordinate>(mbgl::ScreenCoordinate(anchor.Value.X, anchor.Value.Y))
-            :
-            std::nullopt,
-            *animation->NativePointer
-        );
-    }
-
-    System::Void Map::PitchByInThread(System::Double pitch)
-    {
-        NativePointer->pitchBy(pitch);
-    }
-
-    System::Void Map::PitchByInThread2(System::Double pitch, AnimationOptions^ animation)
-    {
-        NativePointer->pitchBy(pitch, *animation->NativePointer);
-    }
-
-    System::Void Map::RotateByInThread(ScreenCoordinate first, ScreenCoordinate second)
-    {
-        NativePointer->rotateBy(
-            mbgl::ScreenCoordinate(first.X, first.Y),
-            mbgl::ScreenCoordinate(second.X, second.Y)
-        );
-    }
-
-    System::Void Map::RotateByInThread2(ScreenCoordinate first, ScreenCoordinate second, AnimationOptions^ animation)
-    {
-        NativePointer->rotateBy(
-            mbgl::ScreenCoordinate(first.X, first.Y),
-            mbgl::ScreenCoordinate(second.X, second.Y),
-            *animation->NativePointer
-        );
-    }
-
-    System::Void Map::SetNorthOrientationInThread(NorthOrientation orientation)
-    {
-        NativePointer->setNorthOrientation((mbgl::NorthOrientation)orientation);
-    }
-
-    System::Void Map::SetConstrainModeInThread(ConstrainMode mode)
-    {
-        NativePointer->setConstrainMode((mbgl::ConstrainMode)mode);
-    }
-
-    System::Void Map::SetViewportModeInThread(ViewportMode mode)
-    {
-        NativePointer->setViewportMode((mbgl::ViewportMode)mode);
-    }
-
-    System::Void Map::SetSizeInThread(Size^ size)
-    {
-        NativePointer->setSize(*size->NativePointer);
-    }
-
-    System::Void Map::SetGestureInProgressInThread(System::Boolean value)
-    {
-        NativePointer->setGestureInProgress(value);
-    }
-
-    System::Void Map::SetProjectionModeInThread(ProjectionMode_^ value)
-    {
-        NativePointer->setProjectionMode(*value->NativePointer);
-    }
-
-    System::Void Map::SetDebugInThread(MapDebugOptions value)
-    {
-        NativePointer->setDebug((mbgl::MapDebugOptions)value);
-    }
-
-    System::Void Map::SetFreeCameraOptionsInThread(FreeCameraOptions_^ value)
     {
         NativePointer->setFreeCameraOptions(*value->NativePointer);
     }

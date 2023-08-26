@@ -74,13 +74,5 @@ namespace DOTNET_NAMESPACE
         property TransformState_^ TransformState { TransformState_^ get(); }
     internal:
         HeadlessFrontend(NativePointerHolder<mbgl::HeadlessFrontend>^ nativePointerHolder);
-    private:
-        System::Void ResetInThread();
-        System::Void UpdateInThread(UpdateParameters^ parameters);
-
-        PremultipliedImage^ ReadStillImageInThread();
-        RenderResult RenderInThread(Map^ map);
-        System::Void RenderOnceInThread(Map^ map);
-        System::Void SetSizeInThread(Size_^ value);
     };
 }

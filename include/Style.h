@@ -63,8 +63,5 @@ namespace DOTNET_NAMESPACE
         */
     internal:
         Style(NativePointerHolder<mbgl::style::Style>^ nativePointerHolder);
-    private:
-        System::Void LoadJSONInThread(System::String^ json);
-        System::Void LoadURLInThread(System::String^ url);
     };
 }

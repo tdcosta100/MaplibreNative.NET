@@ -177,29 +177,5 @@ namespace DOTNET_NAMESPACE
         ResourceOptions^ _ResourceOptions;
         ClientOptions^ _ClientOptions;
         Style_^ _Style;
-
-        System::Void RenderStillInThread(StillImageCallback^ callback);
-        System::Void RenderStillInThread2(CameraOptions^ camera, MapDebugOptions debugOptions, StillImageCallback^ callback);
-        System::Void TriggerRepaintInThread();
-        System::Void CancelTransitionsInThread();
-        System::Void JumpToInThread(CameraOptions^ camera);
-        System::Void EaseToInThread(CameraOptions^ camera, AnimationOptions^ animation);
-        System::Void FlyToInThread(CameraOptions^ camera, AnimationOptions^ animation);
-        System::Void MoveByInThread(ScreenCoordinate point);
-        System::Void MoveByInThread2(ScreenCoordinate point, AnimationOptions^ animation);
-        System::Void ScaleByInThread(System::Double scale, System::Nullable<ScreenCoordinate> anchor);
-        System::Void ScaleByInThread2(System::Double scale, System::Nullable<ScreenCoordinate> anchor, AnimationOptions^ animation);
-        System::Void PitchByInThread(System::Double pitch);
-        System::Void PitchByInThread2(System::Double pitch, AnimationOptions^ animation);
-        System::Void RotateByInThread(ScreenCoordinate first, ScreenCoordinate second);
-        System::Void RotateByInThread2(ScreenCoordinate first, ScreenCoordinate second, AnimationOptions^ animation);
-        System::Void SetNorthOrientationInThread(NorthOrientation orientation);
-        System::Void SetConstrainModeInThread(ConstrainMode mode);
-        System::Void SetViewportModeInThread(ViewportMode mode);
-        System::Void SetSizeInThread(Size^ size);
-        System::Void SetGestureInProgressInThread(System::Boolean value);
-        System::Void SetProjectionModeInThread(ProjectionMode_^ value);
-        System::Void SetDebugInThread(MapDebugOptions value);
-        System::Void SetFreeCameraOptionsInThread(FreeCameraOptions_^ value);
     };
 }

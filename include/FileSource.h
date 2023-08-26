@@ -115,10 +115,5 @@ namespace DOTNET_NAMESPACE
         virtual property ClientOptions_^ ClientOptions { ClientOptions_^ get(); System::Void set(ClientOptions_^ value); }
     internal:
         FileSource(NativePointerHolder<std::shared_ptr<mbgl::FileSource>>^ nativePointerHolder);
-    private:
-        AsyncRequest^ RequestInThread(Resource^ resource, Callback^ callback);
-        System::Void ForwardInThread(Resource^ resource, Response^ response, System::Action^ callback);
-        System::Void PauseInThread();
-        System::Void ResumeInThread();
     };
 }
