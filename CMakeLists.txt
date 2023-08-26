@@ -18,10 +18,11 @@ set_target_properties(
 	mbgl-dotnet
 	PROPERTIES
 		COMMON_LANGUAGE_RUNTIME ""
+		VS_GLOBAL_CLRSupport "true"
 		OUTPUT_NAME ${ASSEMBLY_NAME}
 )
 
-target_compile_options(mbgl-dotnet PRIVATE "/doc")
+target_compile_options(mbgl-dotnet PRIVATE "/doc" "/GT")
 
 if(CMAKE_GENERATOR STREQUAL "Ninja")
 	set(_TARGET_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}")
