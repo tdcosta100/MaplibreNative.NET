@@ -131,5 +131,5 @@ target_link_libraries(
 	mbgl-dotnet
 	PRIVATE
 		Mapbox::Map
-		uv_a
+		libuv::uv_a
 )
