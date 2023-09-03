@@ -14,6 +14,7 @@ This is a minimal example using the `HeadlessFrontend` renderer, in a project wi
 using MaplibreNative;
 using Microsoft.Win32;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows.Media.Imaging;
 
 ...
@@ -31,7 +32,9 @@ using (var map = new Map(frontend, new MapObserver(), new MapOptions().WithSize(
     map.RenderStill(new CameraOptions().WithZoom(0), MapDebugOptions.NoDebug, ex =>
     {
         var image = frontend.ReadStillImage();
-        imageData = image.Data();
+        var image = frontend.ReadStillImage();
+        imageData = new byte[image.Bytes];
+        Marshal.Copy(image.Data, imageData, 0, (int)image.Bytes);
 
         runLoop.Stop();
     });
