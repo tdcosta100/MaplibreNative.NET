@@ -67,6 +67,7 @@ using (var map = new Map(frontend, new MapObserver(), new MapOptions().WithSize(
 
 ...
 ```
+You can check other examples at the [Examples](https://github.com/tdcosta100/MaplibreNative.NET/tree/main/Examples) directory.
 
 ## Building the sources
 
