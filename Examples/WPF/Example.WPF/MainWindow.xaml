@@ -1,0 +1,19 @@
+﻿<Window x:Class="Example.WPF.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Example.WPF"
+        mc:Ignorable="d"
+        Title="MaplibreNative.NET Example" Loaded="Window_Loaded" SizeToContent="WidthAndHeight" ResizeMode="NoResize">
+    <Grid>
+        <Image x:Name="Map" Width="800" Height="600" RenderTransformOrigin="0,0.5" MouseMove="Map_MouseMove" MouseWheel="Map_MouseWheel">
+            <Image.RenderTransform>
+                <ScaleTransform ScaleY="-1" />
+            </Image.RenderTransform>
+            <Image.Effect>
+                <local:RGBAToBGRAColorEffect />
+            </Image.Effect>
+        </Image>
+    </Grid>
+</Window>
