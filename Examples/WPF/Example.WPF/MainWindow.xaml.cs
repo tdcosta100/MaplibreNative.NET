@@ -44,14 +44,16 @@ namespace Example.WPF
 
             if (!Gdi32.SetPixelFormat(_HDC, pixelFormat, ref pfd))
             {
-                throw new Exception($"Erro: 0x{Marshal.GetLastWin32Error():x}");
+                MessageBox.Show($"Error: could not set the pixel format for the map (HRESULT: 0x{Marshal.GetLastWin32Error():x})");
+                Environment.Exit(-1);
             }
 
             _HGLRC = OpenGL32.wglCreateContext(_HDC);
 
             if (!OpenGL32.wglMakeCurrent(_HDC, _HGLRC))
             {
-                throw new Exception($"Erro: 0x{Marshal.GetLastWin32Error():x}");
+                MessageBox.Show($"Error: could not create the OpenGL context for the map (HRESULT: 0x{Marshal.GetLastWin32Error():x})");
+                Environment.Exit(-1);
             }
 
             OpenGL32.Init();
