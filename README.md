@@ -32,7 +32,6 @@ using (var map = new Map(frontend, new MapObserver(), new MapOptions().WithSize(
     map.RenderStill(new CameraOptions().WithZoom(0), MapDebugOptions.NoDebug, ex =>
     {
         var image = frontend.ReadStillImage();
-        var image = frontend.ReadStillImage();
         imageData = new byte[image.Bytes];
         Marshal.Copy(image.Data, imageData, 0, (int)image.Bytes);
 
