@@ -103,6 +103,7 @@ target_sources(
 	${PROJECT_SOURCE_DIR}/src/Response.cpp
 	${PROJECT_SOURCE_DIR}/src/RunLoop.cpp
 	${PROJECT_SOURCE_DIR}/src/Shader.cpp
+	${PROJECT_SOURCE_DIR}/src/ShaderGroup.cpp
 	${PROJECT_SOURCE_DIR}/src/ShaderRegistry.cpp
 	${PROJECT_SOURCE_DIR}/src/Size.cpp
 	${PROJECT_SOURCE_DIR}/src/Style.cpp
