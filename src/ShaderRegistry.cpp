@@ -1,5 +1,6 @@
 #include "Convert.h"
 #include "Shader.h"
+#include "ShaderGroup.h"
 #include "ShaderRegistry.h"
 #include <mbgl/gfx/shader_registry.hpp>
 
@@ -13,33 +14,28 @@ namespace DOTNET_NAMESPACE
     {
     }
 
-    bool ShaderRegistry::IsShader(System::String^ shaderName)
+    ShaderGroup^ ShaderRegistry::GetLegacyGroup()
     {
-        return NativePointer->isShader(Convert::ToStdString(shaderName));
+        return gcnew ShaderGroup(ShaderGroup::CreateNativePointerHolder(&NativePointer->getLegacyGroup(), false));
     }
 
-    Shader^ ShaderRegistry::GetShader(System::String^ shaderName)
+    bool ShaderRegistry::IsShaderGroup(System::String^ shaderGroupName)
     {
-        return gcnew Shader(Shader::CreateNativePointerHolder(NativePointer->getShader(Convert::ToStdString(shaderName)).get(), false));
+        return NativePointer->isShaderGroup(Convert::NativeToStdString(shaderGroupName));
     }
 
-    bool ShaderRegistry::ReplaceShader(Shader^ shader)
+    ShaderGroup^ ShaderRegistry::GetShaderGroup(System::String^ shaderGroupName)
     {
-        return NativePointer->replaceShader(std::shared_ptr<mbgl::gfx::Shader>(shader->NativePointer));
+        return gcnew ShaderGroup(ShaderGroup::CreateNativePointerHolder(NativePointer->getShaderGroup(Convert::NativeToStdString(shaderGroupName)).get(), false));
     }
 
-    bool ShaderRegistry::ReplaceShader(Shader^ shader, System::String^ shaderName)
+    bool ShaderRegistry::ReplaceShader(ShaderGroup^ shaderGroup, System::String^ shaderName)
     {
-        return NativePointer->replaceShader(std::shared_ptr<mbgl::gfx::Shader>(shader->NativePointer), Convert::ToStdString(shaderName));
+        return NativePointer->replaceShader(std::shared_ptr<mbgl::gfx::ShaderGroup>(shaderGroup->NativePointer), Convert::NativeToStdString(shaderName));
     }
 
-    bool ShaderRegistry::RegisterShader(Shader^ shader)
+    bool ShaderRegistry::RegisterShaderGroup(ShaderGroup^ shaderGroup, System::String^ shaderGroupName)
     {
-        return NativePointer->registerShader(std::shared_ptr<mbgl::gfx::Shader>(shader->NativePointer));
-    }
-
-    bool ShaderRegistry::RegisterShader(Shader^ shader, System::String^ shaderName)
-    {
-        return NativePointer->registerShader(std::shared_ptr<mbgl::gfx::Shader>(shader->NativePointer), Convert::ToStdString(shaderName));
+        return NativePointer->registerShaderGroup(std::shared_ptr<mbgl::gfx::ShaderGroup>(shaderGroup->NativePointer), Convert::NativeToStdString(shaderGroupName));
     }
 }

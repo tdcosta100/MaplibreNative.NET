@@ -12,6 +12,7 @@ namespace mbgl
 namespace DOTNET_NAMESPACE
 {
     ref class Shader;
+    ref class ShaderGroup;
 
     /// <summary>
     /// A ShaderRegistry contains a collection of gfx::Shader instances.
@@ -24,54 +25,42 @@ namespace DOTNET_NAMESPACE
         virtual ~ShaderRegistry();
 
         /// <summary>
-        /// Checks if a shader exists in the registry for the given name.
+        /// Get the legacy shader group.
         /// </summary>
-        /// <param name="shaderName">Name of shader</param>
-        /// <returns>If a shader is found, true</returns>
-        virtual bool IsShader(System::String^ shaderName);
+        /// <returns>A <see cref="ShaderGroup"/></returns>
+        ShaderGroup^ GetLegacyGroup();
 
         /// <summary>
-        /// Get a shader from the registry by name.
+        /// Checks if a shader group exists in the registry for the given name.
         /// </summary>
-        /// <param name="shaderName">Name of shader</param>
-        /// <returns>A <see cref="Shader"/> or <see langword="nullptr"/> if no shader is found with the given name</returns>
-        virtual Shader^ GetShader(System::String^ shaderName);
+        /// <param name="shaderGroupName">Name of shader group</param>
+        /// <returns>If a shader group is found, true</returns>
+        virtual bool IsShaderGroup(System::String^ shaderGroupName);
 
         /// <summary>
-        /// Replace a matching shader in the registry with the provided
-        /// instance. Shader type-names must match.
+        /// Get a shader group from the registry by name.
         /// </summary>
-        /// <param name="shader">A <see cref="Shader"/>. The ShaderRegistry will take ownership.</param>
-        /// <returns><see langword="true"/> if a match was found and the shader was replaced, <see langword="false"/> otherwise.</returns>
-        virtual bool ReplaceShader(Shader^ shader);
+        /// <param name="shaderGroupName">Name of shader group</param>
+        /// <returns>A <see cref="ShaderGroup"/> or <see langword="null"/> if no shader group is found with the given name</returns>
+        virtual ShaderGroup^ GetShaderGroup(System::String^ shaderGroupName);
 
         /// <summary>
-        /// Replace a matching shader in the registry with the provided
-        /// instance. Shader type-names must match.
-        /// This variant replaces by explicit name.
+        /// Replace a matching shader group in the registry with the provided name.
         /// </summary>
-        /// <param name="shader">A <see cref="Shader"/>. The ShaderRegistry will take ownership.</param>
-        /// <param name="shaderName">Unique name to register the shader under.</param>
-        /// <returns><see langword="true"/> if a match was found and the shader was replaced, <see langword="false"/> otherwise.</returns>
-        virtual bool ReplaceShader(Shader^ shader, System::String^ shaderName);
+        /// <param name="shaderGroup">A <see cref="ShaderGroup"/>.</param>
+        /// <param name="shaderName">Unique name to register the shader group under.</param>
+        /// <returns>True if a match was found and the shader group was replaced, false otherwise.</returns>
+        virtual bool ReplaceShader(ShaderGroup^ shaderGroup, System::String^ shaderName);
 
         /// <summary>
-        /// Register a new shader with the registry. If a shader is present
-        /// in the registry with a conflicting name, registration will fail.
+        /// Register a new shader group with the registry for the given name.
+        /// If a shader group is present in the registry with a conflicting name, registration will fail.
         /// </summary>
-        /// <param name="shader">A <see cref="Shader"/> to register. The ShaderRegistry will take ownership.</param>
-        /// <returns><see langword="true"/> if the shader was registered, <see langword="false"/> if another shader is already present with a conflicting name.</returns>
-        virtual bool RegisterShader(Shader^ shader);
-
-        /// <summary>
-        /// Register a new shader with the registry. If a shader is present
-        /// in the registry with a conflicting name, registration will fail.
-        /// This variant registers using an explicit name.
-        /// </summary>
-        /// <param name="shader">A <see cref="Shader"/> to register. The ShaderRegistry will take ownership.</param>
-        /// <param name="shaderName">Unique name to register the shader under.</param>
-        /// <returns><see langword="true"/> if the shader was registered, <see langword="false"/> if another shader is already present with a conflicting name.</returns>
-        virtual bool RegisterShader(Shader^ shader, System::String^ shaderName);
+        /// <param name="shaderGroup">A <see cref="ShaderGroup"/> to register.</param>
+        /// <param name="shaderGroupName">Unique name to register the shader group under.</param>
+        /// <returns>True if the shader group was registered, false if another shader group is
+        /// already present with a conflicting name.</returns>
+        virtual bool RegisterShaderGroup(ShaderGroup^ shaderGroup, System::String^ shaderGroupName);
     internal:
         ShaderRegistry(NativePointerHolder<mbgl::gfx::ShaderRegistry>^ nativePointerHolder);
     };
